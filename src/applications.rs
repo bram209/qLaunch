@@ -44,7 +44,7 @@ fn read_application(path: &str) -> Option<Application> {
             //dirty temporary fix
             let len = exec.len();
             if exec.clone().chars().nth(len - 2).unwrap() == '%' {
-                exec.truncate(len - 2);
+                exec.truncate(len - 3);
             }
 
             return Some(Application {

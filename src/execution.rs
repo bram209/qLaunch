@@ -6,13 +6,7 @@ use std::process::Output;
 pub enum ExecutionResult {
     Succeeded,
     Failed(String),
-    //    Output(String) //for calculations or other
 }
-
-pub fn execute_result(result: &SearchResult) {
-    println!(" result = {:?}", execute(result.exec.to_owned()));
-}
-
 
 pub fn execute(cmd: String) -> ExecutionResult {
     println!("cmd = {:?}", cmd);

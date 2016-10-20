@@ -24,11 +24,10 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     }
 
     let window = Window::new(WindowType::Toplevel);
-    window.set_position(WindowPosition::CenterAlways);
+    window.set_position(WindowPosition::Center);
     window.set_title("App launcher");
-    window.set_default_size(450, 400);
     window.set_decorated(false);
-    window.set_resizable(false);
+    window.set_default_size(450, 0);
 
     //gui layout
     //  - box
@@ -44,6 +43,8 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     box_container.add(&search_entry);
     scrolled_window.add(&treeview);
     scrolled_window.set_vexpand(true);
+    scrolled_window.set_min_content_height(0);
+
     box_container.add(&scrolled_window);
 
     //setup list store
@@ -63,10 +64,15 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     treeview.set_show_expanders(false);
     treeview.set_enable_search(false);
     treeview.set_activate_on_single_click(true);
-    //    treeview.set_search_entry(Some(&search_entry));
 
     window.add(&box_container);
-    window.show_all();
+    window.show();
+    box_container.show();
+    search_entry.show();
+    scrolled_window.realize();
+    treeview.show();
+    search_entry.grab_focus();
+
     WindowExt::set_opacity(&window, 0.9);
 
     window.connect_delete_event(|_, _| {
@@ -88,11 +94,11 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
         }
     });
 
-    let temp = selected_result.clone(); //ugly?
+    let temp = selected_result.clone();
     treeview.connect_row_activated(move |treeview, path, column| {
         let selected = (*temp).borrow().clone();
         if let Some(search_result) = selected {
-            execution::execute_result(&search_result);
+            execution::execute(search_result.exec);
             gtk::main_quit();
         }
     });
@@ -100,9 +106,27 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     search_entry.connect_activate(move |_| {
         let selected = selected_result.borrow().clone();
         if let Some(search_result) = selected {
-            execution::execute_result(&search_result);
+            execution::execute(search_result.exec);
             gtk::main_quit();
         }
+    });
+
+
+
+    window.connect_key_release_event(move |s, key| {
+        let keyval = key.get_keyval();
+        let keystate = key.get_state();
+        match keyval {
+            key::Escape => gtk::main_quit(),
+            _ => {}
+        }
+
+        Inhibit(false)
+    });
+
+    window.connect_focus_out_event(move |_, _| {
+        gtk::main_quit();
+        Inhibit(false)
     });
 
     search_entry.connect_changed(move |s| {
@@ -111,6 +135,7 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
         if text.len() == 0 {
             if scrolled_window.is_visible() {
                 scrolled_window.set_visible(false);
+                window.resize(450, s.get_preferred_height().1);
             }
             return
         }
@@ -126,27 +151,9 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
 
                 * current_search_results.borrow_mut() = results;
             treeview.set_cursor(&TreePath::new_first(), None, false);
+
+            window.resize(450, 400);
         }
-    });
-
-
-    window.connect_key_release_event(move |s, key| {
-        let keyval = key.get_keyval();
-        let keystate = key.get_state();
-        // let keystate = (*key).state;
-        println!("key pressed: {}", keyval);
-        match keyval {
-            key::Escape => gtk::main_quit(),
-            _ => {}
-        }
-
-        Inhibit(false)
-    });
-
-
-    window.connect_focus_out_event(move |_, _| {
-        gtk::main_quit();
-        Inhibit(false)
     });
 
     gtk::main();
