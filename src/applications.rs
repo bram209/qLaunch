@@ -1,6 +1,7 @@
 use std::fs;
 use std::fs::File;
 use std::io;
+use std::env;
 use ini::Ini;
 
 #[derive(Debug, Clone)]
@@ -13,7 +14,9 @@ pub struct Application {
 pub fn read_applications() -> Vec<Application> {
     let mut applications: Vec<Application> = vec![];
 
-    for path in vec!["/usr/share/applications/", "/home/bram/.local/share/applications/"] {
+    let home_dir = env::var_os("HOME").unwrap();
+    let local_apps = home_dir.into_string().unwrap() + "/.local/share/applications/";
+    for path in vec!["/usr/share/applications/", &local_apps] {
         match fs::read_dir(path) {
             Err(why) => println!("! {:?}", why.kind()),
             Ok(paths) => for path in paths {
@@ -36,7 +39,6 @@ fn read_application(path: &str) -> Option<Application> {
         let section = ok!(entry.section(Some("Desktop Entry".to_owned())));
         if ok!(section.get("Type")) == "Application" {
             let mut exec = ok!(section.get("Exec")).clone();
-
             //todo just remove %f, %u, %F or %U field codes for now
             //todo expand_field_codes(...)
             //dirty temporary fix
@@ -47,7 +49,7 @@ fn read_application(path: &str) -> Option<Application> {
 
             return Some(Application {
                 name: ok!(section.get("Name")).to_owned(),
-                comment: ok!(section.get("Comment")).to_owned(),
+                comment: section.get("Comment").unwrap_or(&"".to_owned()).to_owned(),
                 exec: exec.to_owned(),
             });
         }
