@@ -9,6 +9,8 @@ glib = "0.1.0"
 gdk = "0.5.0"
 itertools = "0.5.2"
 gdk-sys = "0.3.1"
+gtk-sys = "0.3.1"
+gdk-pixbuf = "^0"
 
 [dependencies.gtk]
 version = "0.1.0"

@@ -8,8 +8,15 @@ use glib;
 use gdk::enums::key;
 use gdk_sys::GDK_KEY_PRESS;
 use gtk::prelude::*;
-use gtk::{ListStore, ScrolledWindow, Orientation, Button, Window, WindowType, SearchEntry, WindowPosition, TreeView, TreeViewColumn, TreePath, CellRendererText, Container};
+
+use gtk::{MessageDialog, ButtonsType, CellRendererPixbuf, CssProvider, StyleContext, ListStore,
+    ScrolledWindow, Orientation, Button, Window, WindowType, SearchEntry, WindowPosition, TreeView,
+    TreeViewColumn, TreePath, CellRendererText, Container, DIALOG_MODAL, MessageType};
+use gdk_pixbuf::Pixbuf;
+use gtk_sys;
 use itertools::Itertools;
+use std::mem;
+use utils;
 
 use engine::SearchEngine;
 use engine::SearchResult;
@@ -17,7 +24,6 @@ use engine::ApplicationSearcher;
 use execution;
 
 pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
-    env::set_var("GTK_THEME", "Adwaita:dark");
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
@@ -29,16 +35,24 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     window.set_decorated(false);
     window.set_default_size(450, 0);
 
-    //gui layout
-    //  - box
-    //      - search entry
-    //      - scrolled window
-    //          - treeview
+    let css_path = "/usr/share/themes/Adapta/gtk-3.0/gtk-dark.css";
+    let css_provider = CssProvider::new();
+    if css_provider.load_from_path(css_path).is_err() {
+        println!("unable to load CSS!");
+    };
+
+    let screen = gtk::WindowExt::get_screen(&window).unwrap();
+    StyleContext::add_provider_for_screen(&screen, &css_provider, 600);
 
     let box_container = gtk::Box::new(Orientation::Vertical, 0);
     let search_entry = SearchEntry::new();
     let scrolled_window = ScrolledWindow::new(None, None);
     let treeview = TreeView::new();
+
+    //make sure that the search entry has no rounded corners
+    let css_provider = CssProvider::new();
+    css_provider.load_from_data("entry.search { border-radius: 0px; font-size: 22px; } ");
+    search_entry.get_style_context().unwrap().add_provider(&css_provider, 600);
 
     box_container.add(&search_entry);
     scrolled_window.add(&treeview);
@@ -48,16 +62,20 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     box_container.add(&scrolled_window);
 
     //setup list store
-    let column_types = [glib::Type::String];
+    let column_types = [Pixbuf::static_type(), String::static_type()];
     let completion_store = ListStore::new(&column_types);
     treeview.set_model(Some(&completion_store));
 
     //setup treeview
     let column = TreeViewColumn::new();
-    let cell = CellRendererText::new();
+    let text_renderer = CellRendererText::new();
+    let icon_renderer = CellRendererPixbuf::new();
+    column.pack_start(&icon_renderer, false);
+    column.add_attribute(&icon_renderer, "pixbuf", 0);
+    column.pack_start(&text_renderer, true);
+    column.add_attribute(&text_renderer, "text", 1);
 
-    column.pack_start(&cell, true);
-    column.add_attribute(&cell, "text", 0);
+    let image = Pixbuf::new_from_file(&(utils::qlauncher_settings_folder() + "resources/eye.png")).unwrap();
     treeview.append_column(&column);
 
     treeview.set_headers_visible(false);
@@ -106,11 +124,11 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     search_entry.connect_activate(move |_| {
         let selected = selected_result.borrow().clone();
         if let Some(search_result) = selected {
-            execution::execute(search_result.exec);
+            println!(" = {:?}", execution::execute(search_result.exec));
+
             gtk::main_quit();
         }
     });
-
 
 
     window.connect_key_release_event(move |s, key| {
@@ -145,8 +163,17 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
         let results = search_engine.search(&text).collect_vec();
         if results.len() > 0 {
             for result in results.iter() {
-                let iter = completion_store.append();
-                completion_store.set(&iter, &[0], &[&result.name]);
+                //                let iter = completion_store.append();
+                //                completion_store.set(&iter, &[0], &[&result.name]);
+
+                if result.icon_path.is_none() {
+                    completion_store.insert_with_values(None, &[0, 1],
+                                                        &[&image, &result.name]);
+                } else {
+                    let image = Pixbuf::new_from_file_at_size((&result.icon_path).clone().unwrap().as_ref(), 64, 64).unwrap();
+                    completion_store.insert_with_values(None, &[0, 1],
+                                                        &[&image, &result.name]);
+                }
             }
 
                 * current_search_results.borrow_mut() = results;

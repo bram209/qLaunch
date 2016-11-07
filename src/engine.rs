@@ -6,7 +6,8 @@ use applications;
 #[derive(Debug, Clone)]
 pub struct SearchResult {
     pub name: String,
-    pub exec: String
+    pub exec: String,
+    pub icon_path: Option<String>
 }
 
 pub trait SearchEngine {
@@ -20,8 +21,9 @@ pub struct ApplicationSearcher {
 
 impl ApplicationSearcher {
     pub fn new() -> ApplicationSearcher {
+        let mut application_reader = applications::ApplicationReader::new();
         ApplicationSearcher {
-            applications: applications::read_applications()
+            applications: application_reader.read_applications()
         }
     }
 }
@@ -35,7 +37,8 @@ impl SearchEngine for ApplicationSearcher {
             if app.name.to_lowercase().contains(query) {
                 results.push(SearchResult {
                     name: app.name,
-                    exec: app.exec
+                    exec: app.exec,
+                    icon_path: app.icon_path
                 });
             }
         }

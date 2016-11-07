@@ -4,17 +4,19 @@ extern crate glib;
 extern crate gdk;
 extern crate itertools;
 extern crate gdk_sys;
+extern crate gtk_sys;
+extern crate gdk_pixbuf;
 
-use std::env;
+use std::str;
 
-
+//modules
 mod engine;
 mod execution;
 mod applications;
 mod gui;
+mod icons;
+mod utils;
 
-use engine::SearchResult;
-use engine::SearchEngine;
 use engine::ApplicationSearcher;
 
 fn main() {

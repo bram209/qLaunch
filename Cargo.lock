@@ -3,9 +3,11 @@ name = "app-launcher"
 version = "0.1.0"
 dependencies = [
  "gdk 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gdk-pixbuf 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdk-sys 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gtk 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gtk-sys 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rust-ini 0.9.11 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
