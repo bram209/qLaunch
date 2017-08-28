@@ -1,6 +1,8 @@
 # qLaunch
 Quick app launcher for linux
 
+![Image of qLaunch](https://github.com/bram209/qLaunch/blob/master/qlauncher-screenshot.png?raw=true)
+
 ## Installation
 
 ### Required package
