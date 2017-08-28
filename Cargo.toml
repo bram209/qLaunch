@@ -4,14 +4,14 @@ version = "0.1.0"
 authors = ["Bram Hoendervangers <bram.hoendervangers@gmail.com>"]
 
 [dependencies]
-rust-ini = "0.9.11"
-glib = "0.1.0"
-gdk = "0.5.0"
+rust-ini = "0.10"
+glib = "^0"
+gdk = "^0"
 itertools = "0.5.2"
-gdk-sys = "0.3.1"
-gtk-sys = "0.3.1"
+gdk-sys = "^0"
+gtk-sys = "^0"
 gdk-pixbuf = "^0"
 
 [dependencies.gtk]
-version = "0.1.0"
+version = "0.2.0"
 features = ["v3_10"]

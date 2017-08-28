@@ -130,16 +130,7 @@ impl IconLookup {
 
 
 pub fn get_icon_theme() -> Option<String> {
-    let result = execution::execute_and_output("gsettings get org.gnome.desktop.interface icon-theme".to_owned());
-    match result {
-        Ok(name) => if name.len() > 2 {
-            //theme is surrounded by single quotes
-            unsafe {
-                Some(name.slice_unchecked(1, name.len() - 1).to_owned())  //'Faba-Mono' -> Faba-Mono
-            }
-        } else { None },
-        Err(e) => panic!(e)
-    }
+    utils::get_gsetting("org.gnome.desktop.interface", "icon-theme")
 }
 
 struct IconTheme {
@@ -151,7 +142,7 @@ struct IconTheme {
 
 impl IconTheme {
     fn from_file(theme_path: &str) -> Option<IconTheme> {
-        let ini: Ini = match Ini::load_from_file((theme_path.to_owned() + "index.theme").as_ref()) {
+        let ini: Ini = match Ini::load_from_file(AsRef::<str>::as_ref(&(theme_path.to_owned() + "index.theme"))) {
             Ok(ini) => ini,
             Err(err) => return None
         };

@@ -9,7 +9,7 @@ use gdk::enums::key;
 use gdk_sys::GDK_KEY_PRESS;
 use gtk::prelude::*;
 
-use gtk::{MessageDialog, ButtonsType, CellRendererPixbuf, CssProvider, StyleContext, ListStore,
+use gtk::{MessageDialog, ButtonsType, CellRendererPixbuf, CssProvider, CssProviderExt, StyleContext, ListStore,
     ScrolledWindow, Orientation, Button, Window, WindowType, SearchEntry, WindowPosition, TreeView,
     TreeViewColumn, TreePath, CellRendererText, Container, DIALOG_MODAL, MessageType};
 use gdk_pixbuf::Pixbuf;
@@ -35,13 +35,14 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     window.set_decorated(false);
     window.set_default_size(450, 0);
 
-    let css_path = "/usr/share/themes/Adapta/gtk-3.0/gtk-dark.css";
+    let css_path = format!("/usr/share/themes/{}/gtk-3.0/", get_gtk_theme().unwrap());
     let css_provider = CssProvider::new();
-    if css_provider.load_from_path(css_path).is_err() {
-        println!("unable to load CSS!");
+    // gtk::CssProviderExt::load_from_resource(&css_provider, format!("{}/gtk.gresource", css_path).as_ref());
+    if css_provider.load_from_path(format!("{}/gtk-dark.css", css_path).as_ref()).is_err() {
+        println!("unable to load CSS!\n{}", css_path);
     };
 
-    let screen = gtk::WindowExt::get_screen(&window).unwrap();
+    let screen = window.get_screen().unwrap();
     StyleContext::add_provider_for_screen(&screen, &css_provider, 600);
 
     let box_container = gtk::Box::new(Orientation::Vertical, 0);
@@ -51,7 +52,7 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
 
     //make sure that the search entry has no rounded corners
     let css_provider = CssProvider::new();
-    css_provider.load_from_data("entry.search { border-radius: 0px; font-size: 22px; } ");
+    gtk::CssProviderExt::load_from_data(&css_provider, "entry.search { border-radius: 0px; font-size: 22px; }".as_bytes());
     search_entry.get_style_context().unwrap().add_provider(&css_provider, 600);
 
     box_container.add(&search_entry);
@@ -91,7 +92,7 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     treeview.show();
     search_entry.grab_focus();
 
-    WindowExt::set_opacity(&window, 0.9);
+    window.set_opacity(0.9);
 
     window.connect_delete_event(|_, _| {
         gtk::main_quit();
@@ -184,4 +185,8 @@ pub fn create_and_setup_gui(search_engine: ApplicationSearcher) {
     });
 
     gtk::main();
+}
+
+fn get_gtk_theme() -> Option<String> {
+    utils::get_gsetting("org.gnome.desktop.interface", "gtk-theme")
 }

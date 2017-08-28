@@ -37,6 +37,7 @@ impl ApplicationReader {
 
         let home_dir = env::var_os("HOME").unwrap();
         let local_apps = home_dir.into_string().unwrap() + "/.local/share/applications/";
+       
         for path in vec!["/usr/share/applications/", &local_apps] {
             match fs::read_dir(path) {
                 Err(why) => println!("! {:?}", why.kind()),
